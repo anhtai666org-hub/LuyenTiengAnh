@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hatakawa - Luyện Từ Vựng Tiếng Anh</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body id="body-bg" class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300">
+
+    <!-- Thông báo lỗi góc trên cùng -->
+    <div id="top-alert" class="fixed top-4 left-1/2 -transform -translate-x-1/2 z-50 hidden px-6 py-3 rounded-xl border-2 border-red-500 bg-red-950/90 text-white font-medium shadow-2xl transition-all duration-300 text-sm md:text-base">
+        Bạn đã sai!
+    </div>
+
+    <!-- Header / Thanh công cụ -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/30">H</div>
+                <span class="font-bold text-lg tracking-wider bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Hatakawa Vocab</span>
+            </div>
+            
+            <!-- Thanh điều hướng Tab -->
+            <nav class="flex items-center space-x-1 sm:space-x-2 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/50">
+                <button onclick="switchTab('practice')" id="tab-btn-practice" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 bg-indigo-600 text-white shadow-md">
+                    <i class="fa-solid fa-graduation-cap mr-1.5"></i> Luyện từ
+                </button>
+                <button onclick="switchTab('vocabulary')" id="tab-btn-vocabulary" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-book mr-1.5"></i> Toàn bộ từ vựng
+                </button>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-palette mr-1.5"></i> Tùy chỉnh
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+        <!-- TAB 1: LUYỆN TỪ -->
+        <section id="tab-practice" class="space-y-6">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden text-center max-w-xl mx-auto w-full">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <span class="text-xs uppercase tracking-widest text-indigo-400 font-semibold px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">Thử thách từ vựng</span>
+                
+                <h2 id="question-prompt" class="text-2xl sm:text-3xl font-bold mt-6 mb-2 text-slate-100">Đang tải câu hỏi...</h2>
+                <p id="question-sub" class="text-slate-400 text-sm mb-8">Hãy nhập bản dịch chính xác cho từ trên</p>
+
+                <form id="practice-form" onsubmit="checkAnswer(event)" class="space-y-4">
+                    <div class="relative">
+                        <input type="text" id="user-answer" autocomplete="off" placeholder="Nhập câu trả lời của bạn..." 
+                            class="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-slate-700 text-slate-100 text-center text-lg focus:outline-none focus:border-indigo-500 transition-all shadow-inner">
+                    </div>
+                    
+                    <button type="submit" class="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] font-semibold text-white transition-all shadow-lg shadow-indigo-600/30">
+                        Kiểm tra đáp án <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </form>
+
+                <div id="mistake-counter" class="mt-6 text-sm text-amber-400 font-medium h-6"></div>
+            </div>
+        </section>
+
+        <!-- TAB 2: TOÀN BỘ TỪ VỰNG -->
+        <section id="tab-vocabulary" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-book-open mr-2 text-indigo-400"></i>Danh sách Từ vựng</h2>
+                    <p class="text-xs text-slate-400 mt-1">Được đồng bộ thời gian thực với tất cả người dùng khác</p>
+                </div>
+                <button onclick="openPasswordModal()" class="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-purple-600/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-lock-open"></i> Thêm & xóa từ (Nhà sáng tạo)
+                </button>
+            </div>
+
+            <!-- Bảng từ vựng -->
+            <div class="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-semibold">Từ Tiếng Anh</th>
+                                <th class="p-4 font-semibold">Bản Dịch Tiếng Việt</th>
+                                <th class="p-4 font-semibold text-right action-col hidden">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vocab-table-body" class="divide-y divide-slate-800/60 text-sm">
+                            <!-- Render bằng Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: TÙY CHỈNH GIAO DIỆN -->
+        <section id="tab-settings" class="hidden space-y-6 max-w-xl mx-auto w-full">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-palette text-indigo-400"></i> Tùy chỉnh giao diện</h2>
+                <p class="text-sm text-slate-400 mb-6">Thay đổi màu sắc chủ đạo và phong cách trang web theo ý thích của bạn.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Chọn màu chủ đạo nền:</label>
+                        <div class="grid grid-cols-4 gap-3">
+                            <button onclick="setTheme('slate')" class="p-3 rounded-xl bg-slate-950 border-2 border-slate-700 hover:border-indigo-500 text-xs font-medium text-center">Đen Mặc định</button>
+                            <button onclick="setTheme('zinc')" class="p-3 rounded-xl bg-zinc-900 border-2 border-zinc-700 hover:border-indigo-500 text-xs font-medium text-center">Xám Xám</button>
+                            <button onclick="setTheme('neutral')" class="p-3 rounded-xl bg-neutral-900 border-2 border-neutral-700 hover:border-indigo-500 text-xs font-medium text-center">Tối Lạnh</button>
+                            <button onclick="setTheme('gray')" class="p-3 rounded-xl bg-gray-900 border-2 border-gray-700 hover:border-indigo-500 text-xs font-medium text-center">Xám Đậm</button>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-800">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Kiểu hiển thị khung luyện tập:</label>
+                        <div class="flex gap-3">
+                            <button onclick="setLayout('centered')" class="flex-1 py-3 rounded-xl bg-slate-800 border border-slate-700 text-sm font-medium hover:bg-slate-700">Căn giữa</button>
+                            <button onclick="setLayout('wide')" class="flex-1 py-3 rounded-xl bg-slate-800 border border-slate-700 text-sm font-medium hover:bg-slate-700">Mở rộng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL NHẬP MẬT KHẨU QUẢN TRỊ -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative animate-scale">
+            <h3 class="text-lg font-bold text-slate-100 mb-2"><i class="fa-solid fa-lock text-purple-400 mr-2"></i>Xác thực nhà sáng tạo</h3>
+            <p class="text-xs text-slate-400 mb-4">Vui lòng nhập mật khẩu quản trị để tiếp tục.</p>
+            
+            <form id="password-form" onsubmit="verifyPassword(event)">
+                <input type="password" id="admin-password-input" placeholder="Nhập mật khẩu..." autocomplete="current-password"
+                    class="w-full px-4 py-3 rounded-xl bg-slate-950 border-2 border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-purple-500 transition-all mb-4">
+                
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button" onclick="closePasswordModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Thoát</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/30 transition-all">Xác nhận MK</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL QUẢN LÝ / THÊM TỪ VỰNG -->
+    <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-slate-100"><i class="fa-solid fa-screwdriver-wrench text-indigo-400 mr-2"></i>Thêm & Xóa Từ vựng</h3>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <!-- Form thêm từ -->
+            <form onsubmit="addNewVocab(event)" class="space-y-4 mb-6 bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Thêm từ mới</h4>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Từ mới (Tiếng Anh hoặc Việt)</label>
+                    <input type="text" id="new-en" required placeholder="Ví dụ: Cat" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Bản dịch [Anh hoặc Việt]</label>
+                    <input type="text" id="new-vi" required placeholder="Ví dụ: Con mèo" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAdminModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-800">Thoát</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md">Hoàn tất</button>
+                </div>
+            </form>
+
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Danh sách từ hiện có (Xóa nhanh)</h4>
+            <div id="admin-vocab-list" class="max-h-48 overflow-y-auto space-y-2 pr-1">
+                <!-- Render động -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let vocabList = [];
+        let currentQuestion = null;
+        let remainingMistakes = 3;
+        let isAdminLoggedIn = false;
+
+        // Tải danh sách từ vựng từ Backend
+        async function fetchVocab() {
+            try {
+                const res = await fetch('/api/vocab');
+                vocabList = await res.json();
+                renderVocabTable();
+                if (!currentQuestion && vocabList.length > 0) {
+                    nextQuestion();
+                }
+            } catch (err) {
+                console.error("Lỗi tải từ vựng:", err);
+            }
+        }
+
+        // Chuyển Tab
+        function switchTab(tabName) {
+            document.getElementById('tab-practice').classList.add('hidden');
+            document.getElementById('tab-vocabulary').classList.add('hidden');
+            document.getElementById('tab-settings').classList.add('hidden');
+
+            document.getElementById('tab-btn-practice').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white";
+            document.getElementById('tab-btn-vocabulary').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white";
+            document.getElementById('tab-btn-settings').className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white";
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabName}`).className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 bg-indigo-600 text-white shadow-md";
+        }
+
+        // Random câu hỏi
+        function nextQuestion() {
+            if (vocabList.length === 0) return;
+            remainingMistakes = 3;
+            document.getElementById('mistake-counter').innerText = `Số lần còn lại có thể nhập sai: ${remainingMistakes}`;
+            
+            // Random item
+            const randomIndex = Math.floor(Math.random() * vocabList.length);
+            const item = vocabList[randomIndex];
+
+            // Random hướng (Anh -> Việt hoặc Việt -> Anh)
+            const isEnToVi = Math.random() < 0.5;
+            currentQuestion = {
+                target: isEnToVi ? item.vi.toLowerCase() : item.en.toLowerCase(),
+                display: isEnToVi ? item.en : item.vi,
+                directionLabel: isEnToVi ? "Hãy nhập bản dịch Tiếng Việt của từ:" : "Hãy nhập từ Tiếng Anh tương ứng với:"
+            };
+
+            document.getElementById('question-prompt').innerText = currentQuestion.display;
+            document.getElementById('question-sub').innerText = currentQuestion.directionLabel;
+            document.getElementById('user-answer').value = '';
+            document.getElementById('user-answer').style.borderColor = '';
+        }
+
+        // Kiểm tra đáp án
+        function checkAnswer(e) {
+            e.preventDefault();
+            const inputField = document.getElementById('user-answer');
+            const userVal = inputField.value.trim().toLowerCase();
+
+            if (userVal === currentQuestion.target) {
+                // Đúng -> chuyển từ khác ngay
+                inputField.style.borderColor = '#10b981'; // Xanh lá
+                setTimeout(() => {
+                    nextQuestion();
+                }, 300);
+            } else {
+                // Sai
+                remainingMistakes--;
+                
+                // Rung điện thoại (nếu thiết bị hỗ trợ Vibration API)
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+
+                // Hiệu ứng rung lắc & viền đỏ khung nhập
+                inputField.classList.add('animate-shake');
+                inputField.style.borderColor = '#ef4444';
+                setTimeout(() => {
+                    inputField.classList.remove('animate-shake');
+                }, 300);
+
+                if (remainingMistakes > 0) {
+                    document.getElementById('mistake-counter').innerText = `Bạn còn ${remainingMistakes} lần sai cho từ này!`;
+                } else {
+                    // Hết 3 lần sai -> Chuyển từ và hiện thông báo 2 giây
+                    showTopAlert("Bạn đã sai!");
+                    nextQuestion();
+                }
+            }
+        }
+
+        // Hiện thông báo phía trên trong 2s
+        function showTopAlert(text) {
+            const alertBox = document.getElementById('top-alert');
+            alertBox.innerText = text;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 2000);
+        }
+
+        // Render bảng từ vựng toàn bộ
+        function renderVocabTable() {
+            const tbody = document.getElementById('vocab-table-body');
+            const adminList = document.getElementById('admin-vocab-list');
+            const actionCols = document.querySelectorAll('.action-col');
+            
+            tbody.innerHTML = '';
+            adminList.innerHTML = '';
+
+            if (isAdminLoggedIn) {
+                actionCols.forEach(el => el.classList.remove('hidden'));
+            } else {
+                actionCols.forEach(el => el.classList.add('hidden'));
+            }
+
+            vocabList.forEach((item, index) => {
+                // Bảng chính
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-200">${item.en}</td>
+                    <td class="p-4 text-slate-300">${item.vi}</td>
+                    <td class="p-4 text-right action-col ${isAdminLoggedIn ? '' : 'hidden'}">
+                        <button onclick="deleteVocab(${index})" class="text-red-400 hover:text-red-300 p-1 rounded-lg hover:bg-red-500/10 transition-all"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Danh sách trong modal quản trị
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs";
+                div.innerHTML = `
+                    <div><span class="font-semibold text-indigo-400">${item.en}</span> - <span>${item.vi}</span></div>
+                    <button onclick="deleteVocab(${index})" class="text-red-400 hover:text-red-300 px-2 py-1 bg-red-500/10 rounded-lg">Xóa</button>
+                `;
+                adminList.appendChild(div);
+            });
+        }
+
+        // Xử lý mật khẩu Quản trị
+        function openPasswordModal() {
+            if (isAdminLoggedIn) {
+                document.getElementById('admin-modal').classList.remove('hidden');
+            } else {
+                document.getElementById('password-modal').classList.remove('hidden');
+                document.getElementById('admin-password-input').value = '';
+                document.getElementById('admin-password-input').style.borderColor = '';
+            }
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').classList.add('hidden');
+        }
+
+        function verifyPassword(e) {
+            e.preventDefault();
+            const input = document.getElementById('admin-password-input');
+            const pass = input.value;
+
+            if (pass === "Vocabulary111012") {
+                isAdminLoggedIn = true;
+                closePasswordModal();
+                document.getElementById('admin-modal').classList.remove('hidden');
+                renderVocabTable();
+            } else {
+                // Sai mật khẩu -> Rung, viền đỏ, xóa mật khẩu sai
+                if (navigator.vibrate) navigator.vibrate(200);
+                input.classList.add('animate-shake');
+                input.style.borderColor = '#ef4444';
+                input.value = '';
+                setTimeout(() => {
+                    input.classList.remove('animate-shake');
+                }, 300);
+            }
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        // Thêm từ mới (đồng bộ server)
+        async function addNewVocab(e) {
+            e.preventDefault();
+            const en = document.getElementById('new-en').value.trim();
+            const vi = document.getElementById('new-vi').value.trim();
+
+            const res = await fetch('/api/vocab', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ en, vi })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                vocabList = data.data;
+                renderVocabTable();
+                document.getElementById('new-en').value = '';
+                document.getElementById('new-vi').value = '';
+                showTopAlert("Đã thêm từ thành công và đồng bộ!");
+            } else {
+                alert(data.message);
+            }
+        }
+
+        // Xóa từ (đồng bộ server)
+        async function deleteVocab(index) {
+            if (!confirm("Bạn có chắc muốn xóa từ này?")) return;
+
+            const res = await fetch('/api/vocab/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                vocabList = data.data;
+                renderVocabTable();
+                showTopAlert("Đã xóa từ thành công!");
+            } else {
+                alert(data.message);
+            }
+        }
+
+        // Tùy chỉnh Giao diện
+        function setTheme(theme) {
+            const body = document.getElementById('body-bg');
+            if (theme === 'slate') body.className = "bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300";
+            if (theme === 'zinc') body.className = "bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans transition-colors duration-300";
+            if (theme === 'neutral') body.className = "bg-neutral-950 text-neutral-100 min-h-screen flex flex-col font-sans transition-colors duration-300";
+            if (theme === 'gray') body.className = "bg-gray-950 text-gray-100 min-h-screen flex flex-col font-sans transition-colors duration-300";
+        }
+
+        function setLayout(style) {
+            // Có thể mở rộng bố cục tùy ý tại đây
+            alert("Đã áp dụng bố cục: " + style);
+        }
+
+        // Khởi chạy khi load trang
+        fetchVocab();
+        // Tự động đồng bộ từ vựng định kỳ mỗi 10 giây với những người dùng khác
+        setInterval(fetchVocab, 10000);
+    </script>
+</body>
+</html>
