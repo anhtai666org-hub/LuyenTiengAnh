@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hatakawa - Luyện Từ Vựng Tiếng Anh</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body id="body-bg" class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300">
+
+    <!-- Thông báo lỗi góc trên cùng -->
+    <div id="top-alert" class="fixed top-4 left-1/2 -transform -translate-x-1/2 z-50 hidden px-6 py-3 rounded-xl border-2 border-red-500 bg-red-950/90 text-white font-medium shadow-2xl transition-all duration-300 text-sm md:text-base">
+        Bạn đã sai!
+    </div>
+
+    <!-- Header / Thanh công cụ -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <div id="logo-box" class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/30 transition-colors">H</div>
+                <span class="font-bold text-lg tracking-wider bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Hatakawa Vocab</span>
+            </div>
+            
+            <!-- Thanh điều hướng Tab -->
+            <nav class="flex items-center space-x-1 sm:space-x-2 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/50">
+                <button onclick="switchTab('practice')" id="tab-btn-practice" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 bg-indigo-600 text-white shadow-md">
+                    <i class="fa-solid fa-graduation-cap mr-1.5"></i> Luyện từ
+                </button>
+                <button onclick="switchTab('vocabulary')" id="tab-btn-vocabulary" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-book mr-1.5"></i> Toàn bộ từ vựng
+                </button>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-palette mr-1.5"></i> Tùy chỉnh
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+        <!-- TAB 1: LUYỆN TỪ -->
+        <section id="tab-practice" class="space-y-6">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden text-center max-w-xl mx-auto w-full">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <span id="badge-theme" class="text-xs uppercase tracking-widest text-indigo-400 font-semibold px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">Thử thách từ vựng</span>
+                
+                <h2 id="question-prompt" class="text-2xl sm:text-3xl font-bold mt-6 mb-2 text-slate-100">Đang tải câu hỏi...</h2>
+                <p id="question-sub" class="text-slate-400 text-sm mb-8">Hãy nhập bản dịch chính xác cho từ trên</p>
+
+                <form id="practice-form" onsubmit="checkAnswer(event)" class="space-y-4">
+                    <div class="relative">
+                        <input type="text" id="user-answer" autocomplete="off" placeholder="Nhập câu trả lời của bạn..." 
+                            class="w-full px-5 py-4 rounded-2xl bg-slate-950 border-2 border-slate-700 text-slate-100 text-center text-lg focus:outline-none focus:border-indigo-500 transition-all shadow-inner">
+                    </div>
+                    
+                    <button type="submit" id="submit-btn" class="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] font-semibold text-white transition-all shadow-lg shadow-indigo-600/30">
+                        Kiểm tra đáp án <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </form>
+
+                <div id="mistake-counter" class="mt-6 text-sm text-amber-400 font-medium h-6"></div>
+            </div>
+        </section>
+
+        <!-- TAB 2: TOÀN BỘ TỪ VỰNG -->
+        <section id="tab-vocabulary" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-100"><i class="fa-solid fa-book-open mr-2 text-indigo-400"></i>Danh sách Từ vựng</h2>
+                    <p class="text-xs text-slate-400 mt-1">Được đồng bộ thời gian thực với tất cả người dùng khác</p>
+                </div>
+                <button onclick="openPasswordModal()" class="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-purple-600/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-lock-open"></i> Thêm & xóa từ (Nhà sáng tạo)
+                </button>
+            </div>
+
+            <!-- Bảng từ vựng -->
+            <div class="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-semibold">Từ Tiếng Anh</th>
+                                <th class="p-4 font-semibold">Bản Dịch Tiếng Việt</th>
+                                <th class="p-4 font-semibold text-right action-col hidden">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vocab-table-body" class="divide-y divide-slate-800/60 text-sm">
+                            <!-- Render bằng Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: TÙY CHỈNH GIAO DIỆN -->
+        <section id="tab-settings" class="hidden space-y-6 max-w-xl mx-auto w-full">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-palette text-indigo-400"></i> Tùy chỉnh giao diện</h2>
+                <p class="text-sm text-slate-400 mb-6">Chọn màu sắc chủ đạo giao diện (Hiển thị 4 màu nhanh và nút mở bảng đầy đủ 12 màu).</p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-3">Màu chủ đạo nhanh:</label>
+                        <div class="grid grid-cols-5 gap-3 items-center">
+                            <!-- 4 Màu chính hiển thị sẵn -->
+                            <button onclick="setTheme('slate')" class="p-3 rounded-xl bg-slate-900 border-2 border-indigo-500 text-xs font-medium text-center hover:border-indigo-400 transition-all shadow-md">Mặc định</button>
+                            <button onclick="setTheme('red')" class="p-3 rounded-xl bg-red-950 border-2 border-red-600 text-xs font-medium text-center text-red-200 hover:bg-red-900 transition-all shadow-md">Đỏ</button>
+                            <button onclick="setTheme('blue')" class="p-3 rounded-xl bg-blue-950 border-2 border-blue-600 text-xs font-medium text-center text-blue-200 hover:bg-blue-900 transition-all shadow-md">Xanh dương</button>
+                            <button onclick="setTheme('purple')" class="p-3 rounded-xl bg-purple-950 border-2 border-purple-600 text-xs font-medium text-center text-purple-200 hover:bg-purple-900 transition-all shadow-md">Tím</button>
+                            
+                            <!-- Nút dấu ba chấm mở bảng 12 màu -->
+                            <button onclick="openColorModal()" class="p-3 rounded-xl bg-slate-800 border-2 border-slate-600 text-sm font-bold text-center text-slate-200 hover:bg-slate-700 transition-all flex items-center justify-center shadow-md" title="Mở đầy đủ 12 màu">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-800">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Bố cục trang luyện tập:</label>
+                        <div class="flex gap-3">
+                            <button onclick="setLayout('centered')" class="flex-1 py-3 rounded-xl bg-slate-800 border border-slate-700 text-sm font-medium hover:bg-slate-700">Căn giữa tiêu chuẩn</button>
+                            <button onclick="setLayout('wide')" class="flex-1 py-3 rounded-xl bg-slate-800 border border-slate-700 text-sm font-medium hover:bg-slate-700">Mở rộng khung</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL CHỌN ĐẦY ĐỦ 12 MÀU -->
+    <div id="color-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-slate-100"><i class="fa-solid fa-palette text-indigo-400 mr-2"></i>Bộ sưu tập 12 màu sắc</h3>
+                <button onclick="closeColorModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">Chọn một trong 12 màu bên dưới để thay đổi giao diện trang web:</p>
+            
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="setTheme('slate'); closeColorModal();" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold hover:border-indigo-500">1. Mặc định</button>
+                <button onclick="setTheme('red'); closeColorModal();" class="p-3 rounded-xl bg-red-950 border border-red-700 text-xs font-semibold text-red-200 hover:border-red-500">2. Đỏ rực</button>
+                <button onclick="setTheme('blue'); closeColorModal();" class="p-3 rounded-xl bg-blue-950 border border-blue-700 text-xs font-semibold text-blue-200 hover:border-blue-500">3. Xanh dương</button>
+                <button onclick="setTheme('purple'); closeColorModal();" class="p-3 rounded-xl bg-purple-950 border border-purple-700 text-xs font-semibold text-purple-200 hover:border-purple-500">4. Tím mộng mơ</button>
+                <button onclick="setTheme('emerald'); closeColorModal();" class="p-3 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-semibold text-emerald-200 hover:border-emerald-500">5. Xanh ngọc</button>
+                <button onclick="setTheme('amber'); closeColorModal();" class="p-3 rounded-xl bg-amber-950 border border-amber-700 text-xs font-semibold text-amber-200 hover:border-amber-500">6. Hổ phách</button>
+                <button onclick="setTheme('rose'); closeColorModal();" class="p-3 rounded-xl bg-rose-950 border border-rose-700 text-xs font-semibold text-rose-200 hover:border-rose-500">7. Hồng cánh sen</button>
+                <button onclick="setTheme('cyan'); closeColorModal();" class="p-3 rounded-xl bg-cyan-950 border border-cyan-700 text-xs font-semibold text-cyan-200 hover:border-cyan-500">8. Xanh lơ</button>
+                <button onclick="setTheme('orange'); closeColorModal();" class="p-3 rounded-xl bg-orange-950 border border-orange-700 text-xs font-semibold text-orange-200 hover:border-orange-500">9. Cam năng động</button>
+                <button onclick="setTheme('zinc'); closeColorModal();" class="p-3 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-semibold text-zinc-300 hover:border-zinc-500">10. Xám thép</button>
+                <button onclick="setTheme('teal'); closeColorModal();" class="p-3 rounded-xl bg-teal-950 border border-teal-700 text-xs font-semibold text-teal-200 hover:border-teal-500">11. Xanh cổ vịt</button>
+                <button onclick="setTheme('indigo'); closeColorModal();" class="p-3 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-semibold text-indigo-200 hover:border-indigo-500">12. Xanh chàm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NHẬP MẬT KHẨU QUẢN TRỊ -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative animate-scale">
+            <h3 class="text-lg font-bold text-slate-100 mb-2"><i class="fa-solid fa-lock text-purple-400 mr-2"></i>Xác thực nhà sáng tạo</h3>
+            <p class="text-xs text-slate-400 mb-4">Vui lòng nhập mật khẩu quản trị để tiếp tục.</p>
+            
+            <form id="password-form" onsubmit="verifyPassword(event)">
+                <input type="password" id="admin-password-input" placeholder="Nhập mật khẩu..." autocomplete="current-password"
+                    class="w-full px-4 py-3 rounded-xl bg-slate-950 border-2 border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-purple-500 transition-all mb-4">
+                
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button" onclick="closePasswordModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all">Thoát</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/30 transition-all">Xác nhận MK</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL QUẢN LÝ / THÊM TỪ VỰNG -->
+    <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-slate-100"><i class="fa-solid fa-screwdriver-wrench text-indigo-400 mr-2"></i>Thêm & Xóa Từ vựng</h3>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <!-- Form thêm từ -->
+            <form onsubmit="addNewVocab(event)" class="space-y-4 mb-6 bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Thêm từ mới</h4>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Từ mới (Tiếng Anh hoặc Việt)</label>
+                    <input type="text" id="new-en" required placeholder="Ví dụ: Suburb" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Bản dịch [Anh hoặc Việt]</label>
+                    <input type="text" id="new-vi" required placeholder="Ví dụ: Vùng ngoại ô" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAdminModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-800">Thoát</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md">Hoàn tất</button>
+                </div>
+            </form>
+
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Danh sách từ hiện có (Xóa nhanh)</h4>
+            <div id="admin-vocab-list" class="max-h-48 overflow-y-auto space-y-2 pr-1">
+                <!-- Render động -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let vocabList = [];
+        let currentQuestion = null;
+        let remainingMistakes = 3;
+        let isAdminLoggedIn = false;
+        let currentThemeColor = 'indigo';
+
+        // Tải danh sách từ vựng từ Backend
+        async function fetchVocab() {
+            try {
+                const res = await fetch('/api/vocab');
+                vocabList = await res.json();
+                renderVocabTable();
+                if (!currentQuestion && vocabList.length > 0) {
+                    nextQuestion();
+                }
+            } catch (err) {
+                console.error("Lỗi tải từ vựng:", err);
+            }
+        }
+
+        // Chuyển Tab
+        function switchTab(tabName) {
+            document.getElementById('tab-practice').classList.add('hidden');
+            document.getElementById('tab-vocabulary').classList.add('hidden');
+            document.getElementById('tab-settings').classList.add('hidden');
+
+            const navButtons = document.querySelectorAll('.nav-tab-btn');
+            navButtons.forEach(btn => {
+                btn.className = "nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white";
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            
+            let activeColorClass = getActiveColorClass(currentThemeColor, 'bg');
+            document.getElementById(`tab-btn-${tabName}`).className = `nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${activeColorClass} text-white shadow-md`;
+        }
+
+        function getActiveColorClass(color, type = 'bg') {
+            const map = {
+                slate: type === 'bg' ? 'bg-slate-700' : 'text-slate-400 border-slate-600',
+                red: type === 'bg' ? 'bg-red-600' : 'text-red-400 border-red-600',
+                blue: type === 'bg' ? 'bg-blue-600' : 'text-blue-400 border-blue-600',
+                purple: type === 'bg' ? 'bg-purple-600' : 'text-purple-400 border-purple-600',
+                emerald: type === 'bg' ? 'bg-emerald-600' : 'text-emerald-400 border-emerald-600',
+                amber: type === 'bg' ? 'bg-amber-600' : 'text-amber-400 border-amber-600',
+                rose: type === 'bg' ? 'bg-rose-600' : 'text-rose-400 border-rose-600',
+                cyan: type === 'bg' ? 'bg-cyan-600' : 'text-cyan-400 border-cyan-600',
+                orange: type === 'bg' ? 'bg-orange-600' : 'text-orange-400 border-orange-600',
+                zinc: type === 'bg' ? 'bg-zinc-700' : 'text-zinc-400 border-zinc-600',
+                teal: type === 'bg' ? 'bg-teal-600' : 'text-teal-400 border-teal-600',
+                indigo: type === 'bg' ? 'bg-indigo-600' : 'text-indigo-400 border-indigo-600',
+            };
+            return map[color] || map['indigo'];
+        }
+
+        // Random câu hỏi
+        function nextQuestion() {
+            if (vocabList.length === 0) return;
+            remainingMistakes = 3;
+            document.getElementById('mistake-counter').innerText = `Số lần còn lại có thể nhập sai: ${remainingMistakes}`;
+            
+            const randomIndex = Math.floor(Math.random() * vocabList.length);
+            const item = vocabList[randomIndex];
+
+            const isEnToVi = Math.random() < 0.5;
+            currentQuestion = {
+                target: isEnToVi ? item.vi.toLowerCase() : item.en.toLowerCase(),
+                display: isEnToVi ? item.en : item.vi,
+                directionLabel: isEnToVi ? "Hãy nhập bản dịch Tiếng Việt của từ:" : "Hãy nhập từ Tiếng Anh tương ứng với:"
+            };
+
+            document.getElementById('question-prompt').innerText = currentQuestion.display;
+            document.getElementById('question-sub').innerText = currentQuestion.directionLabel;
+            document.getElementById('user-answer').value = '';
+            document.getElementById('user-answer').style.borderColor = '';
+        }
+
+        // Kiểm tra đáp án
+        function checkAnswer(e) {
+            e.preventDefault();
+            const inputField = document.getElementById('user-answer');
+            const userVal = inputField.value.trim().toLowerCase();
+
+            if (userVal === currentQuestion.target) {
+                inputField.style.borderColor = '#10b981';
+                setTimeout(() => {
+                    nextQuestion();
+                }, 300);
+            } else {
+                remainingMistakes--;
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+
+                inputField.classList.add('animate-shake');
+                inputField.style.borderColor = '#ef4444';
+                setTimeout(() => {
+                    inputField.classList.remove('animate-shake');
+                }, 300);
+
+                if (remainingMistakes > 0) {
+                    document.getElementById('mistake-counter').innerText = `Bạn còn ${remainingMistakes} lần sai cho từ này!`;
+                } else {
+                    showTopAlert("Bạn đã sai!");
+                    nextQuestion();
+                }
+            }
+        }
+
+        function showTopAlert(text) {
+            const alertBox = document.getElementById('top-alert');
+            alertBox.innerText = text;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 2000);
+        }
+
+        // Render bảng từ vựng
+        function renderVocabTable() {
+            const tbody = document.getElementById('vocab-table-body');
+            const adminList = document.getElementById('admin-vocab-list');
+            const actionCols = document.querySelectorAll('.action-col');
+            
+            tbody.innerHTML = '';
+            adminList.innerHTML = '';
+
+            if (isAdminLoggedIn) {
+                actionCols.forEach(el => el.classList.remove('hidden'));
+            } else {
+                actionCols.forEach(el => el.classList.add('hidden'));
+            }
+
+            vocabList.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-200">${item.en}</td>
+                    <td class="p-4 text-slate-300">${item.vi}</td>
+                    <td class="p-4 text-right action-col ${isAdminLoggedIn ? '' : 'hidden'}">
+                        <button onclick="deleteVocab(${index})" class="text-red-400 hover:text-red-300 p-1 rounded-lg hover:bg-red-500/10 transition-all"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs";
+                div.innerHTML = `
+                    <div><span class="font-semibold text-indigo-400">${item.en}</span> - <span>${item.vi}</span></div>
+                    <button onclick="deleteVocab(${index})" class="text-red-400 hover:text-red-300 px-2 py-1 bg-red-500/10 rounded-lg">Xóa</button>
+                `;
+                adminList.appendChild(div);
+            });
+        }
+
+        // Quản trị mật khẩu
+        function openPasswordModal() {
+            if (isAdminLoggedIn) {
+                document.getElementById('admin-modal').classList.remove('hidden');
+            } else {
+                document.getElementById('password-modal').classList.remove('hidden');
+                document.getElementById('admin-password-input').value = '';
+                document.getElementById('admin-password-input').style.borderColor = '';
+            }
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').classList.add('hidden');
+        }
+
+        function verifyPassword(e) {
+            e.preventDefault();
+            const input = document.getElementById('admin-password-input');
+            const pass = input.value;
+
+            if (pass === "Vocabulary111012") {
+                isAdminLoggedIn = true;
+                closePasswordModal();
+                document.getElementById('admin-modal').classList.remove('hidden');
+                renderVocabTable();
+            } else {
+                if (navigator.vibrate) navigator.vibrate(200);
+                input.classList.add('animate-shake');
+                input.style.borderColor = '#ef4444';
+                input.value = '';
+                setTimeout(() => {
+                    input.classList.remove('animate-shake');
+                }, 300);
+            }
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        async function addNewVocab(e) {
+            e.preventDefault();
+            const en = document.getElementById('new-en').value.trim();
+            const vi = document.getElementById('new-vi').value.trim();
+
+            const res = await fetch('/api/vocab', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ en, vi })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                vocabList = data.data;
+                renderVocabTable();
+                document.getElementById('new-en').value = '';
+                document.getElementById('new-vi').value = '';
+                showTopAlert("Đã thêm từ thành công và đồng bộ!");
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function deleteVocab(index) {
+            if (!confirm("Bạn có chắc muốn xóa từ này?")) return;
+
+            const res = await fetch('/api/vocab/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                vocabList = data.data;
+                renderVocabTable();
+                showTopAlert("Đã xóa từ thành công!");
+            } else {
+                alert(data.message);
+            }
+        }
+
+        // Quản lý Modal 12 màu
+        function openColorModal() {
+            document.getElementById('color-modal').classList.remove('hidden');
+        }
+
+        function closeColorModal() {
+            document.getElementById('color-modal').classList.add('hidden');
+        }
+
+        // Tùy chỉnh 12 màu giao diện
+        function setTheme(theme) {
+            currentThemeColor = theme;
+            const body = document.getElementById('body-bg');
+            const logoBox = document.getElementById('logo-box');
+            const badgeTheme = document.getElementById('badge-theme');
+            const submitBtn = document.getElementById('submit-btn');
+
+            let bgClass = "bg-slate-950";
+            let accentBg = "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30";
+            let accentText = "text-indigo-400";
+            let badgeBg = "bg-indigo-500/10 border-indigo-500/20 text-indigo-400";
+
+            if (theme === 'slate') { bgClass = "bg-slate-950"; accentBg = "bg-slate-700 hover:bg-slate-600 shadow-slate-700/30"; accentText = "text-slate-400"; badgeBg = "bg-slate-500/10 border-slate-500/20 text-slate-300"; }
+            else if (theme === 'red') { bgClass = "bg-stone-950"; accentBg = "bg-red-600 hover:bg-red-500 shadow-red-600/30"; accentText = "text-red-400"; badgeBg = "bg-red-500/10 border-red-500/20 text-red-400"; }
+            else if (theme === 'blue') { bgClass = "bg-slate-950"; accentBg = "bg-blue-600 hover:bg-blue-500 shadow-blue-600/30"; accentText = "text-blue-400"; badgeBg = "bg-blue-500/10 border-blue-500/20 text-blue-400"; }
+            else if (theme === 'purple') { bgClass = "bg-zinc-950"; accentBg = "bg-purple-600 hover:bg-purple-500 shadow-purple-600/30"; accentText = "text-purple-400"; badgeBg = "bg-purple-500/10 border-purple-500/20 text-purple-400"; }
+            else if (theme === 'emerald') { bgClass = "bg-neutral-950"; accentBg = "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30"; accentText = "text-emerald-400"; badgeBg = "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"; }
+            else if (theme === 'amber') { bgClass = "bg-zinc-950"; accentBg = "bg-amber-600 hover:bg-amber-500 shadow-amber-600/30"; accentText = "text-amber-400"; badgeBg = "bg-amber-500/10 border-amber-500/20 text-amber-400"; }
+            else if (theme === 'rose') { bgClass = "bg-stone-950"; accentBg = "bg-rose-600 hover:bg-rose-500 shadow-rose-600/30"; accentText = "text-rose-400"; badgeBg = "bg-rose-500/10 border-rose-500/20 text-rose-400"; }
+            else if (theme === 'cyan') { bgClass = "bg-slate-950"; accentBg = "bg-cyan-600 hover:bg-cyan-500 shadow-cyan-600/30"; accentText = "text-cyan-400"; badgeBg = "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"; }
+            else if (theme === 'orange') { bgClass = "bg-neutral-950"; accentBg = "bg-orange-600 hover:bg-orange-500 shadow-orange-600/30"; accentText = "text-orange-400"; badgeBg = "bg-orange-500/10 border-orange-500/20 text-orange-400"; }
+            else if (theme === 'zinc') { bgClass = "bg-zinc-950"; accentBg = "bg-zinc-700 hover:bg-zinc-600 shadow-zinc-700/30"; accentText = "text-zinc-400"; badgeBg = "bg-zinc-500/10 border-zinc-500/20 text-zinc-300"; }
+            else if (theme === 'teal') { bgClass = "bg-slate-950"; accentBg = "bg-teal-600 hover:bg-teal-500 shadow-teal-600/30"; accentText = "text-teal-400"; badgeBg = "bg-teal-500/10 border-teal-500/20 text-teal-400"; }
+            else if (theme === 'indigo') { bgClass = "bg-slate-950"; accentBg = "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"; accentText = "text-indigo-400"; badgeBg = "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"; }
+
+            body.className = `${bgClass} text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300`;
+            logoBox.className = `w-9 h-9 rounded-xl ${accentBg.split(' ')[0]} flex items-center justify-center font-bold text-lg shadow-lg transition-colors`;
+            badgeTheme.className = `text-xs uppercase tracking-widest font-semibold px-3 py-1 rounded-full border ${badgeBg}`;
+            submitBtn.className = `w-full py-4 rounded-2xl ${accentBg} active:scale-[0.99] font-semibold text-white transition-all shadow-lg`;
+
+            // Cập nhật lại màu tab đang chọn
+            const activeTabBtn = document.querySelector('.nav-tab-btn.bg-indigo-600, .nav-tab-btn.bg-slate-700, .nav-tab-btn.bg-red-600, .nav-tab-btn.bg-blue-600, .nav-tab-btn.bg-purple-600, .nav-tab-btn.bg-emerald-600, .nav-tab-btn.bg-amber-600, .nav-tab-btn.bg-rose-600, .nav-tab-btn.bg-cyan-600, .nav-tab-btn.bg-orange-600, .nav-tab-btn.bg-zinc-700, .nav-tab-btn.bg-teal-600');
+            if (activeTabBtn) {
+                activeTabBtn.className = `nav-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${accentBg.split(' ')[0]} text-white shadow-md`;
+            }
+        }
+
+        function setLayout(style) {
+            alert("Đã áp dụng bố cục: " + (style === 'centered' ? 'Căn giữa tiêu chuẩn' : 'Mở rộng khung'));
+        }
+
+        // Khởi chạy khi load trang
+        fetchVocab();
+        setInterval(fetchVocab, 10000);
+    </script>
+</body>
+</html>
